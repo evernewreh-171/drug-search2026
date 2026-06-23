@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>院內藥品手冊查詢</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal-dark: #0a4f5e;
+      --teal: #0e7490;
+      --teal-light: #cffafe;
+      --teal-pale: #f0fdff;
+      --accent: #f59e0b;
+      --accent-light: #fef3c7;
+      --text: #1a2332;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --bg: #f8fafc;
+      --white: #ffffff;
+      --red: #ef4444;
+      --green: #22c55e;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans TC', 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 100%);
+      padding: 0 24px;
+      box-shadow: 0 2px 8px rgba(10,79,94,0.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: white;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo-text { font-size: 17px; font-weight: 700; letter-spacing: 0.5px; }
+    .logo-sub { font-size: 11px; opacity: 0.75; font-weight: 300; letter-spacing: 1px; }
+
+    .header-link {
+      color: rgba(255,255,255,0.8);
+      font-size: 13px;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.25);
+      transition: all 0.2s;
+    }
+    .header-link:hover { background: rgba(255,255,255,0.15); color: white; }
+
+    /* Search section */
+    .search-section {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px;
+    }
+
+    .search-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .search-bar-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 16px;
+      pointer-events: none;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 11px 14px 11px 42px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    #searchInput:focus { border-color: var(--teal); background: white; }
+
+    .btn {
+      padding: 11px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--teal);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--teal-dark); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1.5px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--bg); color: var(--text); }
+
+    /* Filter pills */
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+    .field-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: white;
+      color: var(--text-muted);
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .field-pill:hover { border-color: var(--teal); color: var(--teal); }
+    .field-pill.active {
+      background: var(--teal-light);
+      border-color: var(--teal);
+      color: var(--teal-dark);
+    }
+
+    /* Category filter */
+    .cat-select {
+      padding: 5px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--text);
+      background: white;
+      cursor: pointer;
+      outline: none;
+      margin-left: auto;
+    }
+    .cat-select:focus { border-color: var(--teal); }
+
+    /* Results area */
+    .results-area {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 24px;
+    }
+
+    .results-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .results-count {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .results-count strong { color: var(--teal-dark); font-weight: 600; }
+
+    .sort-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .sort-select {
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      font-size: 12px;
+      font-family: inherit;
+      background: white;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* Drug cards */
+    .drug-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .drug-card {
+      background: white;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: var(--shadow);
+    }
+    .drug-card:hover {
+      border-color: var(--teal);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .card-names { flex: 1; min-width: 0; }
+
+    .drug-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--teal-dark);
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .drug-cname {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .card-badges {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .badge-cat {
+      background: var(--teal-light);
+      color: var(--teal-dark);
+    }
+
+    .badge-preg {
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .badge-preg-A { background: #dcfce7; color: #166534; }
+    .badge-preg-B { background: #dbeafe; color: #1e3a8a; }
+    .badge-preg-C { background: #fef3c7; color: #92400e; }
+    .badge-preg-D { background: #fee2e2; color: #991b1b; }
+    .badge-preg-X { background: #f3e8ff; color: #581c87; }
+
+    .card-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 6px 16px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .info-key {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 1px;
+    }
+
+    .info-val {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .info-val.truncate {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    mark {
+      background: #fef08a;
+      color: inherit;
+      border-radius: 2px;
+      padding: 0 1px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-title { font-size: 16px; font-weight: 500; margin-bottom: 6px; color: var(--text); }
+    .empty-msg { font-size: 13px; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 200;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+
+    .modal {
+      background: white;
+      border-radius: 14px;
+      max-width: 720px;
+      width: 100%;
+      margin: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, var(--teal-dark), var(--teal));
+      padding: 20px 24px;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .modal-header-names {}
+    .modal-drug-name { font-size: 17px; font-weight: 700; line-height: 1.4; }
+    .modal-drug-cname { font-size: 14px; opacity: 0.8; margin-top: 2px; }
+
+    .modal-close {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.35); }
+
+    .modal-body {
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .modal-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-section { }
+    .modal-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 6px;
+    }
+
+    .modal-section-content {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .modal-grid { grid-template-columns: 1fr; }
+      .card-info { grid-template-columns: 1fr; }
+      .search-bar-row { flex-wrap: wrap; }
+      .filter-row { gap: 6px; }
+      .cat-select { margin-left: 0; }
+    }
+
+    /* Loader */
+    .loader {
+      text-align: center;
+      padding: 60px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 24px 0 8px;
+    }
+
+    .page-btn {
+      width: 34px; height: 34px;
+      border-radius: 7px;
+      border: 1.5px solid var(--border);
+      background: white;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text);
+      transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .page-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .page-btn.active {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: white;
+      font-weight: 600;
+    }
+    .page-btn:disabled { opacity: 0.35; cursor: default; }
+    .page-ellipsis { font-size: 13px; color: var(--text-muted); padding: 0 4px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">💊</div>
+      <div>
+        <div class="logo-text">院內藥品手冊</div>
+        <div class="logo-sub">DRUG REFERENCE</div>
+      </div>
+    </div>
+    <a href="admin/index.html" class="header-link">⚙ 後台管理</a>
+  </div>
+</header>
+
+<div class="search-section">
+  <div class="search-inner">
+    <div class="search-bar-row">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="輸入藥品名稱、學名、中文名、商品名、適應症…" autocomplete="off">
+      </div>
+      <button class="btn btn-ghost" onclick="clearSearch()">清除</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">搜尋欄位：</span>
+      <label class="field-pill active"><input type="checkbox" name="field" value="drug" checked hidden>藥品名稱</label>
+      <label class="field-pill active"><input type="checkbox" name="field" value="cname" checked hidden>中文名</label>
+      <label class="field-pill active"><input type="checkbox" name="field" value="generic" checked hidden>學名</label>
+      <label class="field-pill active"><input type="checkbox" name="field" value="brand" checked hidden>商品名</label>
+      <label class="field-pill active"><input type="checkbox" name="field" value="indication" checked hidden>適應症</label>
+      <label class="field-pill"><input type="checkbox" name="field" value="pharm" hidden>藥理</label>
+      <label class="field-pill"><input type="checkbox" name="field" value="dosage" hidden>用法用量</label>
+      <label class="field-pill"><input type="checkbox" name="field" value="sideEffect" hidden>副作用</label>
+      <select class="cat-select" id="catFilter">
+        <option value="">全部分類</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="results-area">
+  <div id="loader" class="loader">載入藥品資料中…</div>
+  <div id="resultsMeta" class="results-meta" style="display:none">
+    <div class="results-count" id="resultsCount"></div>
+    <div class="sort-wrap">
+      排序：
+      <select class="sort-select" id="sortSelect">
+        <option value="default">預設</option>
+        <option value="name-asc">藥名 A→Z</option>
+        <option value="name-desc">藥名 Z→A</option>
+        <option value="cat">分類</option>
+      </select>
+    </div>
+  </div>
+  <div id="drugGrid" class="drug-grid"></div>
+  <div id="pagination" class="pagination"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalIfOverlay(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-header-names">
+        <div class="modal-drug-name" id="mName"></div>
+        <div class="modal-drug-cname" id="mCname"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+let allDrugs = [];
+let filtered = [];
+let currentPage = 1;
+const PAGE_SIZE = 20;
+
+// Load data
+fetch('data/drugs.json')
+  .then(r => r.json())
+  .then(data => {
+    allDrugs = data;
+    buildCategoryFilter();
+    runSearch();
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('resultsMeta').style.display = 'flex';
+  })
+  .catch(() => {
+    document.getElementById('loader').textContent = '載入失敗，請確認 drugs.json 是否存在。';
+  });
+
+function buildCategoryFilter() {
+  const cats = [...new Set(allDrugs.map(d => d.cat).filter(Boolean))].sort();
+  const sel = document.getElementById('catFilter');
+  cats.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+
+// Search
+document.getElementById('searchInput').addEventListener('input', debounce(runSearch, 200));
+document.getElementById('catFilter').addEventListener('change', runSearch);
+document.getElementById('sortSelect').addEventListener('change', renderPage);
+document.querySelectorAll('.field-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const cb = pill.querySelector('input');
+    cb.checked = !cb.checked;
+    pill.classList.toggle('active', cb.checked);
+    runSearch();
+  });
+});
+
+function getActiveFields() {
+  return [...document.querySelectorAll('input[name="field"]:checked')].map(c => c.value);
+}
+
+function runSearch() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const cat = document.getElementById('catFilter').value;
+  const fields = getActiveFields();
+
+  filtered = allDrugs.filter(d => {
+    const catMatch = !cat || d.cat === cat;
+    if (!catMatch) return false;
+    if (!q) return true;
+    return fields.some(f => (d[f] || '').toLowerCase().includes(q));
+  });
+
+  currentPage = 1;
+  renderPage();
+}
+
+function renderPage() {
+  const sort = document.getElementById('sortSelect').value;
+  let data = [...filtered];
+
+  if (sort === 'name-asc') data.sort((a, b) => (a.drug || '').localeCompare(b.drug));
+  else if (sort === 'name-desc') data.sort((a, b) => (b.drug || '').localeCompare(a.drug));
+  else if (sort === 'cat') data.sort((a, b) => (a.cat || '').localeCompare(b.cat));
+
+  const total = data.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageData = data.slice(start, start + PAGE_SIZE);
+
+  const q = document.getElementById('searchInput').value.trim();
+
+  document.getElementById('resultsCount').innerHTML =
+    `共 <strong>${total}</strong> 筆藥品${q ? `（關鍵字：<strong>${escHtml(q)}</strong>）` : ''}`;
+
+  const grid = document.getElementById('drugGrid');
+  if (total === 0) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">找不到符合的藥品</div>
+      <div class="empty-msg">請嘗試不同關鍵字或取消篩選條件</div>
+    </div>`;
+  } else {
+    grid.innerHTML = pageData.map(d => buildCard(d, q)).join('');
+  }
+
+  renderPagination(totalPages);
+}
+
+function buildCard(d, q) {
+  const pregClass = d.preg ? `badge-preg badge-preg-${d.preg}` : '';
+  return `
+  <div class="drug-card" onclick="openModal(${d.id})">
+    <div class="card-top">
+      <div class="card-names">
+        <div class="drug-name">${hl(d.drug || '', q)}</div>
+        <div class="drug-cname">${hl(d.cname || '', q)}</div>
+      </div>
+      <div class="card-badges">
+        ${d.cat ? `<span class="badge badge-cat">${escHtml(d.cat)}</span>` : ''}
+        ${d.preg ? `<span class="badge ${pregClass}">孕 ${escHtml(d.preg)}</span>` : ''}
+      </div>
+    </div>
+    <div class="card-info">
+      ${d.generic ? `<div class="info-item"><div class="info-key">學名</div><div class="info-val truncate">${hl(d.generic, q)}</div></div>` : ''}
+      ${d.brand ? `<div class="info-item"><div class="info-key">商品名</div><div class="info-val truncate">${hl(d.brand, q)}</div></div>` : ''}
+      ${d.indication ? `<div class="info-item" style="grid-column: 1/-1"><div class="info-key">適應症</div><div class="info-val truncate">${hl(d.indication, q)}</div></div>` : ''}
+    </div>
+  </div>`;
+}
+
+function openModal(id) {
+  const d = allDrugs.find(x => x.id === id);
+  if (!d) return;
+
+  document.getElementById('mName').innerHTML = escHtml(d.drug || '');
+  document.getElementById('mCname').innerHTML = escHtml(d.cname || '');
+
+  const pregClass = d.preg ? `badge-preg badge-preg-${d.preg}` : '';
+
+  const sections = [
+    { key: 'indication', label: '適應症' },
+    { key: 'pharm', label: '藥理作用' },
+    { key: 'dosage', label: '用法用量' },
+    { key: 'caution', label: '注意事項' },
+    { key: 'sideEffect', label: '副作用' },
+    { key: 'note', label: '備註' },
+  ];
+
+  const gridItems = [
+    d.generic && `<div><div class="modal-section-title">學名 Generic</div><div class="modal-section-content">${escHtml(d.generic)}</div></div>`,
+    d.brand && `<div><div class="modal-section-title">商品名 Brand</div><div class="modal-section-content">${escHtml(d.brand)}</div></div>`,
+    d.trade && `<div><div class="modal-section-title">貿易名 Trade</div><div class="modal-section-content">${escHtml(d.trade)}</div></div>`,
+    d.appearance && `<div><div class="modal-section-title">外觀</div><div class="modal-section-content">${escHtml(d.appearance)}</div></div>`,
+    d.cat && `<div><div class="modal-section-title">藥品分類</div><div class="modal-section-content">${escHtml(d.cat)}</div></div>`,
+    d.preg && `<div><div class="modal-section-title">懷孕分級</div><div class="modal-section-content"><span class="badge ${pregClass}" style="font-size:13px;padding:3px 10px">${escHtml(d.preg)}</span></div></div>`,
+  ].filter(Boolean);
+
+  let body = '';
+
+  // Badges row
+  body += `<div class="modal-badges">
+    ${d.cat ? `<span class="badge badge-cat">${escHtml(d.cat)}</span>` : ''}
+    ${d.preg ? `<span class="badge ${pregClass}">懷孕 ${escHtml(d.preg)} 級</span>` : ''}
+    ${d.appearance ? `<span class="badge" style="background:#f1f5f9;color:#475569">${escHtml(d.appearance)}</span>` : ''}
+  </div>`;
+
+  // Grid info
+  if (gridItems.length) {
+    body += `<div class="modal-grid">${gridItems.join('')}</div>`;
+  }
+
+  // Sections
+  sections.forEach(s => {
+    if (d[s.key]) {
+      body += `<div class="modal-section">
+        <div class="modal-section-title">${s.label}</div>
+        <div class="modal-section-content">${escHtml(d[s.key])}</div>
+      </div>`;
+    }
+  });
+
+  document.getElementById('mBody').innerHTML = body;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModalIfOverlay(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('catFilter').value = '';
+  runSearch();
+}
+
+function renderPagination(totalPages) {
+  const pg = document.getElementById('pagination');
+  if (totalPages <= 1) { pg.innerHTML = ''; return; }
+
+  let html = '';
+  const prev = currentPage - 1;
+  const next = currentPage + 1;
+
+  html += `<button class="page-btn" onclick="goPage(${prev})" ${currentPage===1?'disabled':''}>‹</button>`;
+
+  const pages = getPageNums(currentPage, totalPages);
+  let last = null;
+  pages.forEach(p => {
+    if (last !== null && p - last > 1) html += `<span class="page-ellipsis">…</span>`;
+    html += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+    last = p;
+  });
+
+  html += `<button class="page-btn" onclick="goPage(${next})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+  pg.innerHTML = html;
+}
+
+function getPageNums(cur, total) {
+  const s = new Set([1, total]);
+  for (let i = Math.max(1, cur-2); i <= Math.min(total, cur+2); i++) s.add(i);
+  return [...s].sort((a,b)=>a-b);
+}
+
+function goPage(p) {
+  currentPage = p;
+  renderPage();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function hl(text, q) {
+  if (!q || !text) return escHtml(text);
+  const escaped = escHtml(text);
+  const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  return escaped.replace(re, m => `<mark>${m}</mark>`);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function debounce(fn, ms) {
+  let t;
+  return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
+</script>
+</body>
+</html>
